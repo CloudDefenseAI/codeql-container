@@ -6,6 +6,12 @@ set inputfile=%1
 set outputfile=%2
 set language=%3
 
+call :print_yellow "%scriptname%"
+call :print_yellow "%inputfile%"
+call :print_yellow "%outputfile%"
+call :print_yellow "%language%"
+
+
 set argCount=0
 for %%x in (%*) do (
    set /A argCount+=1
@@ -19,26 +25,27 @@ if %argCount% LSS 3 (
 exit /b 1
 )
 
-call :print_yellow "Getting the image..."
-docker pull mcr.microsoft.com/cstsectools/codeql-container
-call :print_green "Pulled the container" 
+@REM call :print_yellow "Getting the image..."
+@REM docker pull cdefense/codeql-container
+@REM call :print_green "Pulled the container" 
 
 call :print_yellow "Creating the codeQL database. This might take some time depending on the size of the project..."
-start /W /B docker run --rm --name codeql-container -v "%inputfile%:/opt/src" -v "%outputfile%:/opt/results" -e CODEQL_CLI_ARGS="database create --language=%language%% /opt/results/source_db -s /opt/src" mcr.microsoft.com/cstsectools/codeql-container
+call :print_green "docker run --rm --name codeql-container -v %inputfile%:/opt/src -v %outputfile%:/opt/results -e CODEQL_CLI_ARGS=""database create --language=%language% /opt/results/source_db -s /opt/src"" cdefense/codeql-container"
+start /W /B docker run --rm --name codeql-container -v "%inputfile%:/opt/src" -v "%outputfile%:/opt/results" -e CODEQL_CLI_ARGS="database create --language=%language% /opt/results/source_db -s /opt/src" cdefense/codeql-container
 
 if %errorlevel% GTR 0 (
     call :print_red "Failed creating the database"    
     exit /b %errorlevel%
 )
 
-start /W /B docker run --rm --name codeql-container -v "%inputfile%:/opt/src" -v "%outputfile%:/opt/results" -e CODEQL_CLI_ARGS="database upgrade /opt/results/source_db" mcr.microsoft.com/cstsectools/codeql-container 
+start /W /B docker run --rm --name codeql-container -v "%inputfile%:/opt/src" -v "%outputfile%:/opt/results" -e CODEQL_CLI_ARGS="database upgrade /opt/results/source_db" cdefense/codeql-container
 if %errorlevel% GTR 0 (
     call :print_red "Failed upgrading the database"    
     exit /b %errorlevel%
 )
 
 call :print_yellow "Running the Quality and Security rules on the project"
-start /W /B docker run --rm --name codeql-container -v "%inputfile%:/opt/src" -v "%outputfile%:/opt/results" -e CODEQL_CLI_ARGS="database analyze /opt/results/source_db --format=sarifv2 --output=/opt/results/issues.sarif %language%-security-and-quality.qls" mcr.microsoft.com/cstsectools/codeql-container
+start /W /B docker run --rm --name codeql-container -v "%inputfile%:/opt/src" -v "%outputfile%:/opt/results" -e CODEQL_CLI_ARGS="database analyze /opt/results/source_db --format=sarifv2 --output=/opt/results/issues.sarif %language%-security-and-quality.qls" cdefense/codeql-container
 if %errorlevel% GTR 0 (
     call :print_red "Failed to run the query on the database"    
     exit /b %errorlevel%

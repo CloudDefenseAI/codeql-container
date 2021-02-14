@@ -34,7 +34,7 @@ RUN apt-get update && \
         ln -s /usr/bin/python3.8 /usr/bin/python && \
         ln -s /usr/bin/pip3 /usr/bin/pip 
 
-# Install .NET Core for tools/builds
+# Install .NET Core tools/builds
 RUN cd /tmp && \
     wget https://packages.microsoft.com/config/ubuntu/20.04/packages-microsoft-prod.deb -O packages-microsoft-prod.deb && \
     dpkg -i packages-microsoft-prod.deb && \
@@ -43,6 +43,18 @@ RUN cd /tmp && \
     apt-get update && \
     rm packages-microsoft-prod.deb
 RUN apt-get install -y dotnet-sdk-3.1
+
+# Install Java and maven
+RUN apt-get install -y default-jdk && \
+    apt-get install maven -y 
+
+# Install gradle
+RUN cd /tmp && \
+    wget https://services.gradle.org/distributions/gradle-6.8.2-bin.zip && \
+    unzip -d /opt/gradle /tmp/gradle-*.zip
+
+ENV GRADLE_HOME=/opt/gradle/gradle-6.8.2
+ENV PATH=${GRADLE_HOME}/bin:${PATH}
 
 # Clone our setup and run scripts
 #RUN git clone https://github.com/microsoft/codeql-container /usr/local/startup_scripts
