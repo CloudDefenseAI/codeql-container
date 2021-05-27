@@ -1,4 +1,4 @@
-FROM ubuntu:20.04 AS codeql_base
+FROM ubuntu:groovy-20210416 AS codeql_base
 LABEL maintainer="Github codeql team"
 
 # tzdata install needs to be non-interactive
